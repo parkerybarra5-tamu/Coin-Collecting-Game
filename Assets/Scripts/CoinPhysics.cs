@@ -11,15 +11,16 @@ public class CoinPhysics : MonoBehaviour
         return this;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if(gameManager == null)
+    
+        if (gameManager == null)
         {
             Debug.LogWarning("Manger not set, make sure to call SetManager(GameManager)!");
             return;
         }
         BallPhysics ball;
-        if (collision.gameObject.TryGetComponent<BallPhysics>(out ball))
+        if (other.gameObject.TryGetComponent<BallPhysics>(out ball))
         {
             gameManager.RemoveCoin(this, ball);
         }

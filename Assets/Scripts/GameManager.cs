@@ -75,6 +75,15 @@ public class GameManager : MonoBehaviour
         Debug.LogWarning("SetBallInput(int, BallInput) called for non-exisitent id!");
     }
 
+    public Transform GetBallTransform(int id)
+    {
+        if (m_balls[id]!=null)
+        {
+            return m_balls[id].transform;
+        }
+        return null;
+    }
+
     public void Step(float dt)
     {
         foreach(BallPhysics ball in m_balls)
