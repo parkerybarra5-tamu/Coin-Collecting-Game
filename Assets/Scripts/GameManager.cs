@@ -59,10 +59,22 @@ public class GameManager : MonoBehaviour
     {
         if (m_balls[id] == null)
         {
-            m_balls[id] = Instantiate(ball_prefab).GetComponent<BallPhysics>(); // should allways find component, checked at start;
+            m_balls[id] = Instantiate(ball_prefab, transform).GetComponent<BallPhysics>(); // should allways find component, checked at start;
             return;
         }
-        Debug.LogWarning("AddBall(int) called multiple times for same id!");
+        Debug.LogWarning("AddBall(int) called for invalid id!");
+    }
+
+    public void RemoveBall(int id)
+    {
+        if (m_balls[id] != null)
+        {
+            var copy = m_balls[id];
+            m_balls[id] = null;
+            Destroy(copy.gameObject);
+            return;
+        }
+        Debug.LogWarning("RemoveBall(int) called for invalid id!");
     }
 
     public void SetBallInput(int id, BallInput input)
