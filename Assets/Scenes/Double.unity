@@ -164,7 +164,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   ball_prefab: {fileID: 1840225394443137557, guid: fa0f6be5226035f468002047daf9ab0d, type: 3}
   coin_prefab: {fileID: 4668680393657616283, guid: 273a927b2eae7654f8c71d0e33b95ad5, type: 3}
-  coin_spawns: []
+  coin_spawns:
+  - {fileID: 400183312}
+  - {fileID: 1219074272}
+  - {fileID: 503050739}
+  - {fileID: 593243979}
 --- !u!4 &30282849
 Transform:
   m_ObjectHideFlags: 0
@@ -210,6 +214,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29fbba74477938e409a7af3e0df348e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClientGame
+  m_ballDirection:
+    m_Name: Ball Direction
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 9db41b23-07c5-4d49-a088-c4370b128ed9
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 2D Vector
+      m_Id: ea50538b-5a1a-4477-afd0-591db9948a70
+      m_Path: 2DVector
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 4
+    - m_Name: up
+      m_Id: 8cb8061f-9580-41ec-8c72-d0b69172318b
+      m_Path: <Keyboard>/w
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 8
+    - m_Name: down
+      m_Id: c2156f42-e107-44f7-b6a7-fdeec1a04671
+      m_Path: <Keyboard>/s
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 8
+    - m_Name: left
+      m_Id: a418a8b9-63bf-478c-81bc-1be23318c990
+      m_Path: <Keyboard>/a
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 8
+    - m_Name: right
+      m_Id: 24acdff9-5c3e-47ac-aec7-9ddb5ed93d32
+      m_Path: <Keyboard>/d
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 8
+    m_Flags: 0
+    m_Priority: 0
+  m_ballJump:
+    m_Name: Ball Jump
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: f6d1816d-055c-402d-abc5-fefcc89bf738
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 2a2d157a-343b-4241-a414-999de8833744
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Jump
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  m_cam: {fileID: 1438518210}
+  Ballprefabview: {fileID: 1411674810209884107, guid: b6221e499460d2742bef8a9fe31ee710, type: 3}
+  poffset: {x: 0, y: 1, z: 0}
 --- !u!114 &120325336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -583,6 +658,105 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1380040121}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &769117137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 769117140}
+  - component: {fileID: 769117139}
+  - component: {fileID: 769117138}
+  m_Layer: 0
+  m_Name: Client (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &769117138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769117137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29fbba74477938e409a7af3e0df348e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ClientGame
+  m_ballDirection:
+    m_Name: Ball Direction
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 9db41b23-07c5-4d49-a088-c4370b128ed9
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: f6a78559-f2d5-4a50-bbbd-fcb0903f0ae5
+      m_Path: <Gamepad>/leftStick
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  m_ballJump:
+    m_Name: Ball Jump
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: f6d1816d-055c-402d-abc5-fefcc89bf738
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 680b3ba9-9545-48a2-ae07-8f651d2370d6
+      m_Path: <Gamepad>/buttonSouth
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Jump
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  m_cam: {fileID: 1438518210}
+  Ballprefabview: {fileID: 1411674810209884107, guid: b6221e499460d2742bef8a9fe31ee710, type: 3}
+  poffset: {x: 0, y: 3, z: 0}
+--- !u!114 &769117139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769117137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c801e27ad7bc36245a241b1218aba8f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  ball_prefab: {fileID: 8639015011540876989, guid: 6e7c18ad14760064d9ac9d51eb710567, type: 3}
+  coin_prefab: {fileID: 4668680393657616283, guid: 273a927b2eae7654f8c71d0e33b95ad5, type: 3}
+  coin_spawns: []
+--- !u!4 &769117140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769117137}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.70146, y: -1, z: 6.64392}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &813814528
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,6 +884,105 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &839519083
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 839519086}
+  - component: {fileID: 839519085}
+  - component: {fileID: 839519084}
+  m_Layer: 0
+  m_Name: Client (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &839519084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839519083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29fbba74477938e409a7af3e0df348e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ClientGame
+  m_ballDirection:
+    m_Name: Ball Direction
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 9db41b23-07c5-4d49-a088-c4370b128ed9
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: f6a78559-f2d5-4a50-bbbd-fcb0903f0ae5
+      m_Path: <Gamepad>/leftStick
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Direction
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  m_ballJump:
+    m_Name: Ball Jump
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: f6d1816d-055c-402d-abc5-fefcc89bf738
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 680b3ba9-9545-48a2-ae07-8f651d2370d6
+      m_Path: <Gamepad>/buttonSouth
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ball Jump
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  m_cam: {fileID: 1438518210}
+  Ballprefabview: {fileID: 1411674810209884107, guid: b6221e499460d2742bef8a9fe31ee710, type: 3}
+  poffset: {x: 0, y: 0, z: 0}
+--- !u!114 &839519085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839519083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c801e27ad7bc36245a241b1218aba8f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  ball_prefab: {fileID: 8639015011540876989, guid: 6e7c18ad14760064d9ac9d51eb710567, type: 3}
+  coin_prefab: {fileID: 4668680393657616283, guid: 273a927b2eae7654f8c71d0e33b95ad5, type: 3}
+  coin_spawns: []
+--- !u!4 &839519086
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839519083}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.70146, y: -1, z: 6.64392}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &892081535
 GameObject:
   m_ObjectHideFlags: 0
@@ -906,3 +1179,5 @@ SceneRoots:
   - {fileID: 813814531}
   - {fileID: 30282849}
   - {fileID: 120325337}
+  - {fileID: 839519086}
+  - {fileID: 769117140}

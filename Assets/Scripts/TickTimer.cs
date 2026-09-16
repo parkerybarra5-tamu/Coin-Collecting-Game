@@ -1,3 +1,4 @@
+[System.Serializable]
 public struct TickTimer
 {
     public ushort Tick;
@@ -12,8 +13,30 @@ public struct TickTimer
         while (Acc > SecondsPerTick)
         {
             ticks++;
+            Tick++;
             Acc -= SecondsPerTick;
         }
         return ticks;
     }
+
+    public double TotalTime()
+    {
+        return Tick * SecondsPerTick + Acc;
+    }
+
+    public void RestoreAcc()
+    {
+        while (Acc < 0)
+        {
+            Acc += SecondsPerTick;
+            Tick--;
+        }
+        while (Acc >= SecondsPerTick && Tick != 0)
+        {
+            Acc -= SecondsPerTick;
+            Tick++;
+        }
+    }
+
+    
 }

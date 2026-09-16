@@ -1,48 +1,67 @@
+using System;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.Windows;
 
 struct ClientState
 {
     public NetworkConnection Connection;
-
     public ushort SentPackets;
     public ushort LatestPacket;
     public double LatestReciveTime;
-    public ushort LastEchoPacket;
+    public ushort LastEchoedPacket;
+    public ushort LastestRecivedInputTick;
+
 }
+
 
 
 public class ServerGame : MonoBehaviour
 {
     const int MAX_CLIENTS = 16;
     const int ECHO_BUFFER = 64;
+    const int INPUT_BUFFER = 128;
+    private void OnGUI()
+    {
+        String s = "";
+        for(int i = 0; i<INPUT_BUFFER;i++)
+        {
+            short diff = (short)(m_connectionInputHistories[i].tick - m_simulationTimer.Tick);
+            if (diff > 32 || diff < -95)
+            {
+                s += '0';
+            }
+            else if (diff == 0)
+                {
+                s += '*';
+            }
+            else
+            {
+                s += '1';
+            }
+        }
+        GUILayout.TextArea(s);
+    }
+
 
     [field: SerializeField] GameManager m_gameManager;
 
     NetworkDriver m_driver;
     NativeArray<ClientState> m_connections;
-    NativeArray<double> m_sendTimes;
+    NativeArray<BallInput> m_connectionInputHistories;
+    NativeArray<double> m_sendTimesHistory;
 
     TickTimer m_simulationTimer = new TickTimer { SecondsPerTick = 1.0/64.0, Acc = 0, Tick = 0 };
     TickTimer m_networkTimer = new TickTimer { SecondsPerTick = 1.0 / 20.0, Acc = 0, Tick = 0 };
 
-    private void makeBuffers()
-    {
-        m_connections = new NativeArray<ClientState>(MAX_CLIENTS, Allocator.Persistent);
-        m_sendTimes = new NativeArray<double>(MAX_CLIENTS * ECHO_BUFFER, Allocator.Persistent);
-    }
-
-    private void freeBuffers()
-    {
-        m_connections.Dispose();
-        m_sendTimes.Dispose();
-    }
-
     void Start()
     {
-        makeBuffers();
+
+        m_connections = new NativeArray<ClientState>(MAX_CLIENTS, Allocator.Persistent);
+        m_sendTimesHistory = new NativeArray<double>(MAX_CLIENTS * ECHO_BUFFER, Allocator.Persistent);
+        m_connectionInputHistories = new NativeArray<BallInput>(INPUT_BUFFER * MAX_CLIENTS, Allocator.Persistent);
 
         m_driver = NetworkDriver.Create();
 
@@ -55,6 +74,8 @@ public class ServerGame : MonoBehaviour
             return;
         }
         m_driver.Listen();
+
+        m_gameManager.AddCoins();
     }
 
     private void OnDestroy()
@@ -64,25 +85,85 @@ public class ServerGame : MonoBehaviour
             m_driver.Dispose();
         }
 
-        freeBuffers();
+        m_connections.Dispose();
+        m_sendTimesHistory.Dispose();
+        m_connectionInputHistories.Dispose();
     }
-
+    void setConnectionInput(byte id, ushort tick)
+    {
+        m_gameManager.SetBallInput(id, m_connectionInputHistories[(tick % INPUT_BUFFER) * MAX_CLIENTS + id]);
+    }
+    
     private void Update()
     {
         processNetwork();
 
+        var st = m_simulationTimer.Tick;
         var networkTicks = m_networkTimer.Update(Time.deltaTime);
         var simulationTicks = m_simulationTimer.Update(Time.deltaTime);
 
-        for (int i = 0; i < simulationTicks; i++)
+        for (var i = st; i < m_simulationTimer.Tick; i++)
         {
+            foreachConnectedClient(id => setConnectionInput(id, i));
             m_gameManager.Step((float)m_simulationTimer.SecondsPerTick);
         }
 
         if (networkTicks != 0)
         {
-            networkTick();
+            foreachConnectedClient(sendClientPacket);
         }
+    }
+
+    private void foreachConnectedClient(Action<byte> clientAction)
+    {
+        for (byte i = 0; i < m_connections.Length; i++)
+        {
+            if (m_connections[i].Connection.IsCreated)
+            {
+                clientAction.Invoke(i);    
+            }
+        }
+    }
+
+    private void sendClientPacket(byte id)
+    {
+        var client = m_connections[id];
+
+        m_driver.BeginSend(client.Connection, out var writer);
+        ushort echoNum = (client.LatestPacket != client.LastEchoedPacket) ? client.LatestPacket : (ushort)0;
+        client.LastEchoedPacket = client.LatestPacket;
+        EchoPacket echoPacket = new EchoPacket { packetNumber = echoNum, holdTime = Time.realtimeSinceStartupAsDouble - client.LatestReciveTime };
+        CommonPacket commonPacket = new CommonPacket { packetNumber = client.SentPackets, echoPacket = echoPacket };
+        commonPacket.Write(ref writer);
+        new TickTimerPacket(m_simulationTimer).Write(ref writer);
+
+        writer.WriteUShort(m_connections[id].LastestRecivedInputTick);
+        
+
+
+        var copy = writer;
+        writer.WriteByte(0);
+        byte size = 0;
+        for (int j = 0; j < MAX_CLIENTS; j++)
+        {
+            //writer.WriteByte((byte)(m_connections[j].Connection.IsCreated?1:0));
+            if (m_connections[j].Connection.IsCreated)
+            {
+                size++;
+                writer.WriteByte((byte)j);
+
+                var pos = m_gameManager.GetBallTransform(j);
+                writer.WriteFloat(pos.position.x);
+                writer.WriteFloat(pos.position.y);
+                writer.WriteFloat(pos.position.z);
+            }
+        }
+        copy.WriteByte(size);
+        m_sendTimesHistory[client.SentPackets % ECHO_BUFFER + id * ECHO_BUFFER] = Time.realtimeSinceStartupAsDouble;
+        m_driver.EndSend(writer);
+        client.SentPackets += 1;
+        m_connections[id] = client;
+
     }
 
     private void networkTick()
@@ -94,7 +175,7 @@ public class ServerGame : MonoBehaviour
             {
                 m_driver.BeginSend(client.Connection, out var writer);
                 writer.WriteUShort(client.SentPackets);
-                if(client.LatestPacket == client.LastEchoPacket)
+                if(client.LatestPacket == client.LastEchoedPacket)
                 {
                     writer.WriteUShort(0);
                 }
@@ -103,7 +184,31 @@ public class ServerGame : MonoBehaviour
                     writer.WriteUShort(client.LatestPacket);
                     writer.WriteDouble(Time.realtimeSinceStartupAsDouble - client.LatestReciveTime);
                 }
-                m_sendTimes[client.SentPackets % ECHO_BUFFER + i * ECHO_BUFFER] = Time.realtimeSinceStartupAsDouble;
+
+  
+
+                writer.WriteUShort(m_simulationTimer.Tick);
+                writer.WriteDouble(m_simulationTimer.Acc);
+
+                var copy = writer;
+                writer.WriteByte(0);
+                byte size = 0;
+                for (int j = 0; j < MAX_CLIENTS; j++)
+                {
+                    //writer.WriteByte((byte)(m_connections[j].Connection.IsCreated?1:0));
+                    if (m_connections[j].Connection.IsCreated)
+                    {
+                        size++;
+                        writer.WriteByte((byte)j);
+
+                        var pos = m_gameManager.GetBallTransform(j);
+                        writer.WriteFloat(pos.position.x);
+                        writer.WriteFloat(pos.position.y);
+                        writer.WriteFloat(pos.position.z);
+                    }
+                }
+                copy.WriteByte(size);
+                m_sendTimesHistory[client.SentPackets % ECHO_BUFFER + i * ECHO_BUFFER] = Time.realtimeSinceStartupAsDouble;
                 m_driver.EndSend(writer);
                 client.SentPackets += 1;
                 m_connections[i] = client;
@@ -114,14 +219,13 @@ public class ServerGame : MonoBehaviour
 
     private int getFreeConnection()
     {
-        for(int i = 0; i < m_connections.Length; i++)
+        for (int i = 0; i < m_connections.Length; i++)
         {
             if (!m_connections[i].Connection.IsCreated)
             {
                 return i;
             }
         }
-
         return -1;
     }
 
@@ -135,7 +239,7 @@ public class ServerGame : MonoBehaviour
         else
         {
             m_gameManager.AddBall(freeId);
-            m_connections[freeId] = new ClientState { Connection = connection, SentPackets = 0, LatestPacket = 0, LatestReciveTime = 0, LastEchoPacket = 0};
+            m_connections[freeId] = new ClientState { Connection = connection, SentPackets = 0, LatestPacket = 0, LatestReciveTime = 0, LastEchoedPacket = 0};
         }
     }
 
@@ -145,73 +249,82 @@ public class ServerGame : MonoBehaviour
         m_connections[id] = new ClientState { Connection = default };
     }
 
-    private void processData(int id, ref DataStreamReader reader)
+    private void setInput(int id, BallInput input)
     {
-        var packetNumber = reader.ReadUShort();
-        var echoNumber = reader.ReadUShort();
-        if(echoNumber != 0)
-        {
-            //Debug.Log($"Client Echoed: {echoNumber}");
-            var echoHold = reader.ReadDouble();
-            //Debug.Log($"Client Held: {echoHold}");
+        // Casting the difference to short handles uint16/ushort overflow and wrap-around correctly
+        short diff = (short)(input.tick - m_simulationTimer.Tick);
 
-            if( echoNumber + ECHO_BUFFER > m_connections[id].SentPackets)
-            {
-                //Debug.Log($"Client Ping: {Time.realtimeSinceStartupAsDouble - m_sendTimes[echoNumber % ECHO_BUFFER + id * ECHO_BUFFER] - echoHold}");
-            }
+        // Rejects inputs more than 16 ticks in the future or more than 47 ticks in the past
+        if (diff > 32 || diff < -95)
+        {
+            return;
         }
 
-        if(packetNumber >= m_connections[id].LatestPacket)
+        // Process valid input
+        m_connectionInputHistories[(input.tick%INPUT_BUFFER)*MAX_CLIENTS + id] = input;
+        if (m_connections[id].LastestRecivedInputTick<input.tick)
         {
             var copy = m_connections[id];
-            copy.LatestPacket = packetNumber;
+            copy.LastestRecivedInputTick = input.tick;
+            m_connections[id] = copy;
+        }
+    }
+
+    private void processData(int id, ref DataStreamReader reader)
+    {
+        //Debug.Log($"recived: {reader.Length}");
+     
+        CommonPacket packet = new CommonPacket(ref reader);
+      
+ 
+
+        var inputPacket = new CompressedInputPacket(ref reader);
+        //Debug.Log($"Encoded Inputs: {inputPacket.inputs.Length}");
+        foreach (var i in inputPacket.inputs)
+        {
+            setInput(id, i);
+        }
+
+        if(packet.packetNumber >= m_connections[id].LatestPacket)
+        {
+            var copy = m_connections[id];
+            copy.LatestPacket = packet.packetNumber;
             copy.LatestReciveTime = Time.realtimeSinceStartupAsDouble;
             m_connections[id] = copy;
         }
         
     }
 
+    private void processClient(byte id)
+    {
+        DataStreamReader stream;
+        NetworkEvent.Type cmd;
+
+        while ((cmd = m_driver.PopEventForConnection(m_connections[id].Connection, out stream)) != NetworkEvent.Type.Empty)
+        {
+            if (cmd == NetworkEvent.Type.Data)
+            {
+                processData(id, ref stream);
+            }
+            else if (cmd == NetworkEvent.Type.Disconnect)
+            {
+                processDisconnect(id, m_connections[id].Connection);
+                break;
+            }
+
+        }
+    }
+
     private void processNetwork()
     {
         m_driver.ScheduleUpdate().Complete();
+
         NetworkConnection newConnection;
         while ((newConnection = m_driver.Accept()) != default)
         {
             processConnect(newConnection);
         }
 
-        for (int i = 0; i < m_connections.Length; i++)
-        {
-            DataStreamReader stream;
-            NetworkEvent.Type cmd;
-
-            if(m_connections[i].Connection.IsCreated)
-            {
-                while ((cmd = m_driver.PopEventForConnection(m_connections[i].Connection, out stream)) != NetworkEvent.Type.Empty)
-                {
-                    if (cmd == NetworkEvent.Type.Data)
-                    {
-                       processData(i, ref stream);
-                    }
-                    else if (cmd == NetworkEvent.Type.Disconnect)
-                    {
-                        processDisconnect(i, m_connections[i].Connection);
-                        break;
-                    }
-
-                }
-            }
-           
-        }
-
+        foreachConnectedClient(processClient);
     }
-        
-        
-
-
-
-
-
-
-
 }
